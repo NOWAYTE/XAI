@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XAI SME Workforce Decision System | Explainable AI Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- Chart.js for interactive SHAP & LIME charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Top Navigation / Header -->
+        <header class="app-header">
+            <div class="header-brand">
+                <div class="logo-icon">🧠</div>
+                <div>
+                    <h1>XAI Workforce Decision Support System</h1>
+                    <p class="subtitle">Transparent, Explainable AI for SME Employee Attrition & Retention Strategy</p>
+                </div>
+            </div>
+            <div class="header-meta">
+                <span class="badge badge-active" id="model-status-badge">
+                    <span class="status-dot"></span> XGBoost Model Active (ROC-AUC: 0.804)
+                </span>
+                <span class="badge badge-outline">Threshold: 0.45</span>
+            </div>
+        </header>
+
+        <!-- Main Tab Controls -->
+        <nav class="nav-tabs">
+            <button class="tab-btn active" data-tab="operational-tab">
+                <span class="icon">🎯</span> Operational View (Individual Audit & Inference)
+            </button>
+            <button class="tab-btn" data-tab="strategic-tab">
+                <span class="icon">📊</span> Strategic View (Global SHAP & Academic Theory)
+            </button>
+        </nav>
+
+        <!-- Tab 1: Operational View (Individual Employee Audit) -->
+        <main id="operational-tab" class="tab-content active">
+            <div class="grid-layout">
+                <!-- Left Panel: Form & Presets -->
+                <section class="card input-card">
+                    <div class="card-header">
+                        <h2>Employee Profile Evaluator</h2>
+                        <span class="tooltip-info" title="Load sample employee profiles or tune individual attributes manually.">ℹ️</span>
+                    </div>
+
+                    <!-- Case Study Presets -->
+                    <div class="preset-selector">
+                        <label>⚡ Quick Load Case Studies:</label>
+                        <div class="preset-buttons">
+                            <button type="button" class="btn-preset active" onclick="loadPreset('case1_high_risk')">
+                                🔥 Case 1: High Risk (#453)
+                            </button>
+                            <button type="button" class="btn-preset" onclick="loadPreset('case2_moderate_risk')">
+                                ⚠️ Case 2: Moderate Risk (#210)
+                            </button>
+                            <button type="button" class="btn-preset" onclick="loadPreset('case3_low_risk')">
+                                ✅ Case 3: Low Risk (#108)
+                            </button>
+                        </div>
+                    </div>
+
+                    <hr class="divider">
+
+                    <!-- Interactive Input Form -->
+                    <form id="employee-form" onsubmit="event.preventDefault(); runPrediction();">
+                        <div class="form-grid">
+                            <!-- Column 1 -->
+                            <div class="form-group">
+                                <label for="Age">Age</label>
+                                <input type="number" id="Age" name="Age" value="29" min="18" max="65" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="Department">Department</label>
+                                <select id="Department" name="Department">
+                                    <option value="Sales" selected>Sales</option>
+                                    <option value="Research & Development">Research & Development</option>
+                                    <option value="Human Resources">Human Resources</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="JobRole">Job Role</label>
+                                <select id="JobRole" name="JobRole">
+                                    <option value="Sales Executive" selected>Sales Executive</option>
+                                    <option value="Research Scientist">Research Scientist</option>
+                                    <option value="Laboratory Technician">Laboratory Technician</option>
+                                    <option value="Manufacturing Director">Manufacturing Director</option>
+                                    <option value="Healthcare Representative">Healthcare Representative</option>
+                                    <option value="Manager">Manager</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="OverTime">OverTime</label>
+                                <select id="OverTime" name="OverTime">
+                                    <option value="Yes" selected>Yes (Frequent Overtime)</option>
+                                    <option value="No">No Overtime</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="MonthlyIncome">Monthly Income ($)</label>
+                                <input type="number" id="MonthlyIncome" name="MonthlyIncome" value="2450" min="1000" max="30000" step="100" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="JobSatisfaction">Job Satisfaction (1-4)</label>
+                                <select id="JobSatisfaction" name="JobSatisfaction">
+                                    <option value="1" selected>1 - Very Dissatisfied</option>
+                                    <option value="2">2 - Dissatisfied</option>
+                                    <option value="3">3 - Satisfied</option>
+                                    <option value="4">4 - Very Satisfied</option>
+                                </select>
+                            </div>
+
+                            <!-- Column 2 -->
+                            <div class="form-group">
+                                <label for="EnvironmentSatisfaction">Environment Satisfaction (1-4)</label>
+                                <select id="EnvironmentSatisfaction" name="EnvironmentSatisfaction">
+                                    <option value="1" selected>1 - Low</option>
+                                    <option value="2">2 - Medium</option>
+                                    <option value="3">3 - High</option>
+                                    <option value="4">4 - Very High</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="WorkLifeBalance">Work Life Balance (1-4)</label>
+                                <select id="WorkLifeBalance" name="WorkLifeBalance">
+                                    <option value="1" selected>1 - Poor</option>
+                                    <option value="2">2 - Fair</option>
+                                    <option value="3">3 - Good</option>
+                                    <option value="4">4 - Best</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="DistanceFromHome">Distance From Home (Miles)</label>
+                                <input type="number" id="DistanceFromHome" name="DistanceFromHome" value="24" min="1" max="50" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="StockOptionLevel">Stock Option Level (0-3)</label>
+                                <select id="StockOptionLevel" name="StockOptionLevel">
+                                    <option value="0" selected>0 - No Stock Options</option>
+                                    <option value="1">1 - Level 1</option>
+                                    <option value="2">2 - Level 2</option>
+                                    <option value="3">3 - Level 3</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="YearsAtCompany">Years at Company</label>
+                                <input type="number" id="YearsAtCompany" name="YearsAtCompany" value="2" min="0" max="40" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="YearsSinceLastPromotion">Years Since Last Promotion</label>
+                                <input type="number" id="YearsSinceLastPromotion" name="YearsSinceLastPromotion" value="4" min="0" max="15" required>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-primary" id="predict-btn">
+                            🚀 Evaluate Attrition Risk & Generate Report
+                        </button>
+                    </form>
+                </section>
+
+                <!-- Right Panel: Output & XAI Report -->
+                <section class="output-wrapper">
+                    <!-- Risk Score Card -->
+                    <div class="card result-card" id="result-card">
+                        <div class="result-header">
+                            <div>
+                                <span class="badge" id="risk-badge">CRITICAL ALERT</span>
+                                <h2 id="risk-level-text">High Attrition Risk</h2>
+                                <p id="employee-summary-text">Employee #453 • Sales Executive (Sales)</p>
+                            </div>
+                            <div class="score-dial">
+                                <span class="score-value" id="probability-value">78.4%</span>
+                                <span class="score-label">Attrition Probability</span>
+                            </div>
+                        </div>
+
+                        <!-- Progress Bar Meter -->
+                        <div class="meter-bar-container">
+                            <div class="meter-bar" id="meter-bar" style="width: 78.4%; background: #ef4444;"></div>
+                            <div class="meter-marker" style="left: 45%;" title="Optimal Alert Threshold: 45%">
+                                <span>Threshold (45%)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- XAI Interpretability Panel (SHAP Waterfall & LIME) -->
+                    <div class="card xai-card">
+                        <div class="card-header">
+                            <h3>🔍 Explanation Layer: Why does the AI say this?</h3>
+                            <div class="xai-toggle">
+                                <button class="btn-toggle active" id="toggle-shap" onclick="switchXaiView('shap')">SHAP (Local Waterfall)</button>
+                                <button class="btn-toggle" id="toggle-lime" onclick="switchXaiView('lime')">LIME (Boundary Rules)</button>
+                            </div>
+                        </div>
+
+                        <!-- SHAP Chart Container -->
+                        <div id="shap-view-container" class="xai-view">
+                            <p class="xai-desc">
+                                <strong>SHAP Waterfall Analysis:</strong> Shows the exact mathematical push (+ / -) each feature exerts on pushing this employee toward leaving or staying.
+                            </p>
+                            <div class="chart-container">
+                                <canvas id="shapChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- LIME Table Container -->
+                        <div id="lime-view-container" class="xai-view hidden">
+                            <p class="xai-desc">
+                                <strong>LIME Operational Rules:</strong> Approximates local decision boundaries around this specific employee's feature vector.
+                            </p>
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Key Feature</th>
+                                        <th>Local Rule Weight</th>
+                                        <th>Impact Effect</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="lime-table-body">
+                                    <!-- Dynamic rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Managerial Actionable Report Card -->
+                    <div class="card report-card" id="printable-report">
+                        <div class="card-header">
+                            <h3>📄 Managerial Decision Report & Action Plan</h3>
+                            <button class="btn-secondary" onclick="window.print()">🖨️ Print / Save PDF Report</button>
+                        </div>
+
+                        <div class="report-section">
+                            <h4>🚨 Top Attrition Drivers (Why They Might Leave)</h4>
+                            <ul class="tag-list" id="top-drivers-list">
+                                <!-- Dynamic tags -->
+                            </ul>
+                        </div>
+
+                        <div class="report-section">
+                            <h4>🌱 Retention Catalysts (Why They Might Stay)</h4>
+                            <ul class="tag-list retention" id="top-retention-list">
+                                <!-- Dynamic tags -->
+                            </ul>
+                        </div>
+
+                        <div class="report-section">
+                            <h4>💡 Actionable Managerial Recommendations</h4>
+                            <div class="recommendations-container" id="recommendations-container">
+                                <!-- Dynamic recommendation cards -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- Tab 2: Strategic View (Global XAI & Academic Theory) -->
+        <main id="strategic-tab" class="tab-content">
+            <div class="grid-layout single-col">
+                <!-- Academic Grounding Banner -->
+                <div class="card theory-card">
+                    <h2>🎓 Academic & Theoretical Framework</h2>
+                    <p class="lead">
+                        This Explainable AI framework directly addresses the adoption gap in SME workforce analytics by bridging machine learning accuracy with human decision trust.
+                    </p>
+                    <div class="theory-grid">
+                        <div class="theory-box">
+                            <h3>🏛️ Technology Acceptance Model (TAM)</h3>
+                            <p>
+                                By transforming raw probability into visual SHAP & LIME explanations, the system drastically increases <strong>Perceived Usefulness (PU)</strong> and <strong>Perceived Ease of Use (PEOU)</strong>—ensuring SME managers adopt AI insight rather than rejecting black-box scores.
+                            </p>
+                        </div>
+                        <div class="theory-box">
+                            <h3>🤝 Human-AI Trust Theory</h3>
+                            <p>
+                                Granular local explanations foster <strong>Cognitive Trust</strong>. Managers can verify feature reasoning, preventing both <em>Over-reliance</em> (blind compliance) and <em>Under-reliance</em> (relying solely on gut feeling).
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Model Comparison Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2>🏆 Model Benchmark & Performance Comparison</h2>
+                        <span class="badge badge-active">Winner: XGBoost</span>
+                    </div>
+                    <p class="section-desc">
+                        Comparing traditional Decision Trees and Random Forest against XGBoost on the IBM HR Attrition dataset (1,470 employees with SMOTE oversampling).
+                    </p>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Model Name</th>
+                                <th>Accuracy</th>
+                                <th>Precision</th>
+                                <th>Recall</th>
+                                <th>F1-Score</th>
+                                <th>ROC-AUC</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Decision Tree</td>
+                                <td>0.7857</td>
+                                <td>0.3261</td>
+                                <td>0.3191</td>
+                                <td>0.3226</td>
+                                <td>0.5968</td>
+                            </tr>
+                            <tr>
+                                <td>Random Forest</td>
+                                <td>0.8401</td>
+                                <td>0.5000</td>
+                                <td>0.2128</td>
+                                <td>0.2985</td>
+                                <td>0.7805</td>
+                            </tr>
+                            <tr class="highlight-row">
+                                <td><strong>XGBoost (Selected)</strong></td>
+                                <td><strong>0.8776</strong></td>
+                                <td><strong>0.7200</strong></td>
+                                <td><strong>0.3830</strong></td>
+                                <td><strong>0.5000</strong></td>
+                                <td><strong>0.8041</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Global SHAP Trends -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2>🌐 Global SHAP Feature Importance (Company-Wide Drivers)</h2>
+                    </div>
+                    <p class="section-desc">
+                        Globally across all employees, the top strategic drivers of workforce turnover identified by SHAP:
+                    </p>
+                    <div class="global-features-grid" id="global-features-grid">
+                        <!-- Populated by app.js -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
