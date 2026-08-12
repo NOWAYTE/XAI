@@ -31,7 +31,6 @@ FastAPI backend  ──  Next.js manager dashboard
 | Figures | Confusion, ROC, SHAP, LIME, ... | `figures/` |
 | Inference API | FastAPI prediction + SHAP + recommendations | `backend/` |
 | Manager UI | Next.js decision dashboard | `web/` |
-| Report | Chapters 4–5, figures, tables, appendices | `report/` |
 
 ## Prerequisites
 
@@ -106,23 +105,7 @@ The frontend calls `POST http://localhost:8000/api/predict` for real model predi
 
 ## Retraining
 
-See `backend/retrain_local.py` for a local retraining script, or run the full pipeline in `XAI_Bus.ipynb` (Google Colab / Jupyter).
-
-## Dissertation report
-
-The written deliverables live in `report/`:
-
-- `report/CHAPTER_4_System_Implementation_and_Results.md` — implementation and results
-- `report/CHAPTER_5_Conclusion_and_Recommendations.md` — conclusion and recommendations
-- `report/Chapters_4_and_5_System_Implementation_Results_and_Conclusion.docx` — Word build (all tables + embedded figures)
-- `report/LIST_OF_FIGURES_AND_TABLES.md` — figure/table registry
-- `report/REFERENCES_TO_ADD.md` — references to merge into the main reference list
-
-Rebuild the Word document after changing figures:
-
-```powershell
-.\.venv\Scripts\python.exe build_chapters_4_5_docx.py
-```
+Run the full experimentation pipeline in the project notebook (`XAI_Bus.ipynb`, Google Colab / Jupyter) or extend `backend/retrain_local.py` for local retraining.
 
 ## Project structure
 
@@ -130,12 +113,14 @@ Rebuild the Word document after changing figures:
 backend/          FastAPI inference API, recommendation engine, retraining scripts
 frontend/         Legacy static HTML/JS UI (served by the backend at :8000)
 web/              Next.js manager dashboard (primary UI at :3000)
-figures/          All report figures (ROC, confusion, SHAP, LIME, ...)
-metrics/          Cross-validation and feature importance CSVs
-reports/          Error analysis and misclassified-employee exports
-report/           Dissertation chapters 4–5, tables, appendices, docx build
-*.pkl             Serialised model artefacts (model, preprocessor, explainer)
+xgb_model.pkl     Trained XGBoost classifier
+preprocessor.pkl  ColumnTransformer preprocessing pipeline
+feature_names.pkl 46 engineered feature names
+shap_explainer.pkl Tree SHAP explainer
+model_performance.csv  Model comparison metrics
 ```
+
+Note: the original experimentation notebook (`XAI_Bus.ipynb`), report chapters, and figures are not part of this repository; contact the author for the full research pack.
 
 ## Key results (held-out test set, n = 294)
 
